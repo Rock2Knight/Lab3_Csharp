@@ -40,6 +40,9 @@ namespace Lab3_Afanaseva
         // для визуализации текущего кадра 
         private int pointPosition = 0;
 
+        //Массив цветов
+        private Color[] colors = new Color[6];
+
         // вспомогательные переменные для построения линий от курсора мыши к координатным осям 
         float lineX, lineY;
 
@@ -49,6 +52,7 @@ namespace Lab3_Afanaseva
         // текущение координаты курсора мыши 
         float Mcoord_X = 0, Mcoord_Y = 0;
 
+        string xmin_txt = "-15", ymin_txt = "-15", xmax_txt = "15", ymax_txt = "15";
 
         public Form1()
         {
@@ -75,6 +79,11 @@ namespace Lab3_Afanaseva
             // очистка матрицы 
             Gl.glLoadIdentity();
 
+            textBox1.Text = xmin_txt;
+            textBox2.Text = xmax_txt;
+            textBox3.Text = ymin_txt;
+            textBox4.Text = ymax_txt;
+
             // определение параметров настройки проекции в зависимости от размеров сторон элемента AnT. 
             if ((float)AnT.Width <= (float)AnT.Height)
             {
@@ -100,6 +109,22 @@ namespace Lab3_Afanaseva
             // старт счетчика, отвечающего за вызов функции визуализации сцены 
             PointInGrap.Start();
 
+        }
+
+        private void chooseFunc(object sender, EventArgs e)
+        {
+
+        }
+
+        private void choose_color(object sender, EventArgs e)
+        {
+            colorDialog1.ShowDialog();
+            if (comboBox1.SelectedText == "График") colors[0] = colorDialog1.Color;
+            else if (comboBox1.SelectedText == "Оси") colors[1] = colorDialog1.Color;
+            else if (comboBox1.SelectedText == "Сетка точек") colors[2] = colorDialog1.Color;
+            else if (comboBox1.SelectedText == "Точка") colors[3] = colorDialog1.Color;
+            else if (comboBox1.SelectedText == "Линии курсора") colors[4] = colorDialog1.Color;
+            else if (comboBox1.SelectedText == "Подпись координат") colors[5] = colorDialog1.Color;
         }
 
         private void AnT_MouseMove(object sender, MouseEventArgs e)
@@ -130,6 +155,17 @@ namespace Lab3_Afanaseva
                 Glut.glutBitmapCharacter(Glut.GLUT_BITMAP_9_BY_15, char_for_draw);
             }
 
+        }
+
+        private void draw_click(object sender, EventArgs e)
+        {
+            xmin = (float)Convert.ToDouble(textBox1.Text);
+            xmax = (float)Convert.ToDouble(textBox2.Text);
+            ymin = (float)Convert.ToDouble(textBox3.Text);
+            ymax = (float)Convert.ToDouble(textBox4.Text);
+
+            Draw();
+            DrawDiagram();
         }
 
         // функция, производящая вычисления координат графика 
@@ -177,7 +213,6 @@ namespace Lab3_Afanaseva
 
         private void X_min_text(object sender, EventArgs e)
         {
-
         }
 
         // визуализация графика 
@@ -195,6 +230,8 @@ namespace Lab3_Afanaseva
             // объединяемых в линии (GL_LINE_STRIP) 
             Gl.glBegin(Gl.GL_LINE_STRIP);
 
+            Gl.glColor3ub(colors[0].R, colors[0].G, colors[0].B);
+
             // рисуем начальную точку 
             Gl.glVertex2d(GrapValuesArray[0, 0], GrapValuesArray[0, 1]);
 
@@ -210,7 +247,7 @@ namespace Lab3_Afanaseva
             // устанавливаем размер точек, равный 5 пикселям 
             Gl.glPointSize(5);
             // устанавливаем текущим цветом - красный цвет 
-            Gl.glColor3f(255, 0, 0);
+            Gl.glColor3ub(colors[3].R, colors[3].G, colors[3].B);
             // активируем режим вывода точек (GL_POINTS) 
             Gl.glBegin(Gl.GL_POINTS);
             // выводим красную точку, используя ту ячейку массива, до которой мы дошли (вычисляется в функции обработчике событий таймера) 
@@ -243,6 +280,7 @@ namespace Lab3_Afanaseva
 
             // активируем режим рисования (Указанные далее точки будут выводиться как точки GL_POINTS) 
             Gl.glBegin(Gl.GL_POINTS);
+            Gl.glColor3ub(colors[2].R, colors[2].G, colors[2].B);
 
             // с помощью прохода вдумя циклами, создаем сетку из точек 
             for (float ax = xmin; ax < xmax; ax+=1.0f)
@@ -261,6 +299,7 @@ namespace Lab3_Afanaseva
             // объединяются в линии 
             Gl.glBegin(Gl.GL_LINES);
 
+            Gl.glColor3ub(colors[1].R, colors[1].G, colors[1].B);
             // далее мы рисуем координатные оси и стрелки на их концах 
             Gl.glVertex2f(0, ymin);
             Gl.glVertex2f(0, ymax);
@@ -269,16 +308,16 @@ namespace Lab3_Afanaseva
             Gl.glVertex2f(xmax, 0);
 
             // вертикальная стрелка 
-            Gl.glVertex2d(0, 15);
-            Gl.glVertex2d(0.1, 14.5);
-            Gl.glVertex2d(0, 15);
-            Gl.glVertex2d(-0.1, 14.5);
+            Gl.glVertex2d(0, ymax);
+            Gl.glVertex2d(0.1, ymax-0.5f);
+            Gl.glVertex2d(0, ymax);
+            Gl.glVertex2d(-0.1, ymax-0.5f);
 
             // горизонтальная трелка 
-            Gl.glVertex2d(15, 0);
-            Gl.glVertex2d(14.5, 0.1);
-            Gl.glVertex2d(15, 0);
-            Gl.glVertex2d(14.5, -0.1);
+            Gl.glVertex2d(xmax, 0);
+            Gl.glVertex2d(xmax-1.0f, 0.1);
+            Gl.glVertex2d(xmax, 0);
+            Gl.glVertex2d(xmax-0.5f, -0.1);
 
             // завершаем режим рисования 
             Gl.glEnd();
@@ -293,12 +332,14 @@ namespace Lab3_Afanaseva
             // возвращаем матрицу из стека 
             Gl.glPopMatrix();
 
+            Gl.glColor3ub(colors[5].R, colors[5].G, colors[5].B);
+
             // выводим текст со значением координат возле курсора 
             PrintText2D(devX * Mcoord_X + 0.2f, (float)ScreenH - devY * Mcoord_Y + 0.4f, 
                 "[ x: " + (devX * Mcoord_X - 15).ToString() + " ; y: " + ((float)ScreenH - devY * Mcoord_Y - 15).ToString() + "]");
 
             // устанавливаем красный цвет 
-            Gl.glColor3f(255, 0, 0);
+            Gl.glColor3ub(colors[4].R, colors[4].G, colors[4].B);
 
             // включаем режим рисования линий, для того чтобы нарисовать 
             // линии от курсора мыши к координатным осям 
@@ -327,6 +368,7 @@ namespace Lab3_Afanaseva
 
             // функция визуализации 
             Draw();
+
 
             // переход к следующему элементу массива 
             pointPosition++;
