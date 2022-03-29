@@ -43,6 +43,9 @@ namespace Lab3_Afanaseva
         // вспомогательные переменные для построения линий от курсора мыши к координатным осям 
         float lineX, lineY;
 
+        //Переменные для минимальных и максимальных значений по X и Y
+        float xmin = -15.0f, ymin = -15.0f, xmax = 15.0f, ymax = 15.0f;
+
         // текущение координаты курсора мыши 
         float Mcoord_X = 0, Mcoord_Y = 0;
 
@@ -51,6 +54,51 @@ namespace Lab3_Afanaseva
         {
             InitializeComponent();
             AnT.InitializeContexts();
+
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            // инициализация библиотеки glut 
+            Glut.glutInit();
+            // инициализация режима экрана 
+            Glut.glutInitDisplayMode(Glut.GLUT_RGB | Glut.GLUT_DOUBLE);
+
+            // установка цвета очистки экрана (RGBA) 
+            Gl.glClearColor(255, 255, 255, 1);
+
+            // установка порта вывода 
+            Gl.glViewport(0, 0, AnT.Width, AnT.Height);
+
+            // активация проекционной матрицы 
+            Gl.glMatrixMode(Gl.GL_PROJECTION);
+            // очистка матрицы 
+            Gl.glLoadIdentity();
+
+            // определение параметров настройки проекции в зависимости от размеров сторон элемента AnT. 
+            if ((float)AnT.Width <= (float)AnT.Height)
+            {
+                ScreenW = 30;
+                ScreenH = 30.0 * (float)AnT.Height / (float)AnT.Width;
+                Glu.gluOrtho2D(0.0, ScreenW, 0.0, ScreenH);
+            }
+            else
+            {
+                ScreenW = 30.0 * (float)AnT.Width / (float)AnT.Height;
+                ScreenH = 30.0;
+                Glu.gluOrtho2D(0.0, 30.0 * (float)AnT.Width / (float)AnT.Height, 0.0, 30.0);
+            }
+
+            // сохранение коэффициентов, которые нам необходимы для перевода координат указателя в оконной системе в координаты, 
+            // принятые в нашей OpenGL сцене 
+            devX = (float)ScreenW / (float)AnT.Width;
+            devY = (float)ScreenH / (float)AnT.Height;
+
+            // установка объектно-видовой матрицы 
+            Gl.glMatrixMode(Gl.GL_MODELVIEW);
+
+            // старт счетчика, отвечающего за вызов функции визуализации сцены 
+            PointInGrap.Start();
 
         }
 
@@ -101,7 +149,7 @@ namespace Lab3_Afanaseva
             elements_count = 0;
 
             // вычисления всех значений y для x, принадлежащего промежутку от -15 до 15 с шагом в 0.01f 
-            for (x = -15; x < 15; x += 0.1f)
+            for (x = xmin; x < xmax; x += 0.1f)
             {
                 // вычисление y для текущего x 
                 // по формуле y = (float)Math.Sin(x)*3 + 1; 
@@ -119,6 +167,16 @@ namespace Lab3_Afanaseva
 
             // изменяем флаг, сигнализировавший о том, что координаты графика не вычислены 
             not_calculate = false;
+
+        }
+
+        private void X_min_label_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void X_min_text(object sender, EventArgs e)
+        {
 
         }
 
@@ -187,9 +245,9 @@ namespace Lab3_Afanaseva
             Gl.glBegin(Gl.GL_POINTS);
 
             // с помощью прохода вдумя циклами, создаем сетку из точек 
-            for (int ax = -15; ax < 15; ax++)
+            for (float ax = xmin; ax < xmax; ax+=1.0f)
             {
-                for (int bx = -15; bx < 15; bx++)
+                for (float bx = ymin; bx < ymax; bx+=1.0f)
                 {
                     // вывод точки 
                     Gl.glVertex2d(ax, bx);
@@ -204,11 +262,11 @@ namespace Lab3_Afanaseva
             Gl.glBegin(Gl.GL_LINES);
 
             // далее мы рисуем координатные оси и стрелки на их концах 
-            Gl.glVertex2d(0, -15);
-            Gl.glVertex2d(0, 15);
+            Gl.glVertex2f(0, ymin);
+            Gl.glVertex2f(0, ymax);
 
-            Gl.glVertex2d(-15, 0);
-            Gl.glVertex2d(15, 0);
+            Gl.glVertex2f(xmin, 0);
+            Gl.glVertex2f(xmax, 0);
 
             // вертикальная стрелка 
             Gl.glVertex2d(0, 15);
@@ -246,9 +304,9 @@ namespace Lab3_Afanaseva
             // линии от курсора мыши к координатным осям 
             Gl.glBegin(Gl.GL_LINES);
 
-            Gl.glVertex2d(lineX, 15);
+            Gl.glVertex2d(lineX, ymax);
             Gl.glVertex2d(lineX, lineY);
-            Gl.glVertex2d(15, lineY);
+            Gl.glVertex2d(xmax, lineY);
             Gl.glVertex2d(lineX, lineY);
 
             Gl.glEnd();
@@ -272,51 +330,6 @@ namespace Lab3_Afanaseva
 
             // переход к следующему элементу массива 
             pointPosition++;
-
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            // инициализация библиотеки glut 
-            Glut.glutInit();
-            // инициализация режима экрана 
-            Glut.glutInitDisplayMode(Glut.GLUT_RGB | Glut.GLUT_DOUBLE);
-
-            // установка цвета очистки экрана (RGBA) 
-            Gl.glClearColor(255, 255, 255, 1);
-
-            // установка порта вывода 
-            Gl.glViewport(0, 0, AnT.Width, AnT.Height);
-
-            // активация проекционной матрицы 
-            Gl.glMatrixMode(Gl.GL_PROJECTION);
-            // очистка матрицы 
-            Gl.glLoadIdentity();
-
-            // определение параметров настройки проекции в зависимости от размеров сторон элемента AnT. 
-            if ((float)AnT.Width <= (float)AnT.Height)
-            {
-                ScreenW = 30.0;
-                ScreenH = 30.0 * (float)AnT.Height / (float)AnT.Width;
-                Glu.gluOrtho2D(0.0, ScreenW, 0.0, ScreenH);
-            }
-            else
-            {
-                ScreenW = 30.0 * (float)AnT.Width / (float)AnT.Height;
-                ScreenH = 30.0;
-                Glu.gluOrtho2D(0.0, 30.0 * (float)AnT.Width / (float)AnT.Height, 0.0, 30.0);
-            }
-
-            // сохранение коэффициентов, которые нам необходимы для перевода координат указателя в оконной системе в координаты, 
-            // принятые в нашей OpenGL сцене 
-            devX = (float)ScreenW / (float)AnT.Width;
-            devY = (float)ScreenH / (float)AnT.Height;
-
-            // установка объектно-видовой матрицы 
-            Gl.glMatrixMode(Gl.GL_MODELVIEW);
-
-            // старт счетчика, отвечающего за вызов функции визуализации сцены 
-            PointInGrap.Start();
 
         }
 
